@@ -248,8 +248,8 @@ def main():
   fixDescription(descriptio)
   clean_csv(relationship, "CSVItems/modified_relationship.csv")
 
-  # Combine description with 
-
+  # Combine description with the nodes
+  combine_nodes()
 
   # Populate the database
   with driver.session() as session:
