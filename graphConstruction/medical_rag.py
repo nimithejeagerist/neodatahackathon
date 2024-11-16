@@ -113,8 +113,8 @@ def populate_relationships(transaction, relationships, batch_size=500):
 def fixDescription(description):
   """
   Description CSV has errors has the term column has commas within the term segment. Additionally, there are quotations which were removed manually. 
-  There is also encoding issues has the data wasn't in UTF-8 format so it was rewritten.
   """
+
   # nodes = pd.read_csv(node, sep='\t', dtype=str)
   # relationships = pd.read_csv(relationship, sep='\t', dtype=str)
 
@@ -130,8 +130,10 @@ def fixDescription(description):
 
 def relation_update():
   """
-  
+  The original relationship.csv contains numerical values so modified_relationship.csv contains the actual word for which each node corresponds to.
   """
+
+  # Mapping the relationship number to the word
   relationship_group_mapping = {
     0: "ATTRIBUTE",
     1: 'IS_A',
@@ -142,6 +144,7 @@ def relation_update():
     6: "TEMPORAL"
   }
 
+  # Not all the columns are needed
   columns_to_drop = [
       "id",
       "effectiveTime",
@@ -153,13 +156,23 @@ def relation_update():
       "modifierId"
   ]
   
-  relationships_df = pd.read_csv('relationship.csv')
+  # Let pandas go over the CSV
+  relationships_df = pd.read_csv('CSVItems/relationship.csv')
+
+  # Maps and deletes columns
   relationships_df['relationshipType'] = relationships_df['relationshipGroup'].map(relationship_group_mapping)
   relationships_df.drop(columns=columns_to_drop, inplace=True)
+
+  # Finally, convert the fixes to a new modified_relationship.csv file
   relationships_df.to_csv('modified_relationship.csv', index=False)
 
 
 def clean_csv(input_path, output_path):
+    """
+    There is also encoding issues has the data wasn't in UTF-8 format so it was rewritten.
+    """
+
+    # Reopen and fix encoding issues
     with open(input_path, 'r', encoding='utf-8') as infile, open(output_path, 'w', encoding='utf-8', newline='') as outfile:
         reader = csv.reader(infile)
         writer = csv.writer(outfile)
@@ -171,27 +184,40 @@ def clean_csv(input_path, output_path):
 
 
 def combine_nodes():
+  """
+  We can combine certain elements of nodes.csv and description.csv to allow for faster uploading.
+  """
+
+  # We join the nodes.id with the descriptions.conceptId
   nodes = pd.read_csv("nodes.csv", usecols=["id", "active"], dtype={"id": "int"})
   descriptions = pd.read_csv("description.csv", usecols=["conceptId", "term", "effectiveTime"])
 
+  # Drop all rows with NaN values
   descriptions = descriptions.dropna(subset=["conceptId"])
-  descriptions["conceptId"] = descriptions["conceptId"].astype(int)
+  descriptions["conceptId"] = descriptions["conceptId"].astype(int)  # convert to int
 
+  # Fill all effectiveTime to 0 if they are null then convert to integer
   descriptions["effectiveTime"] = pd.to_numeric(descriptions["effectiveTime"], errors='coerce')
   descriptions["effectiveTime"] = descriptions["effectiveTime"].fillna(0).astype(int)
 
+  # Merge the two
   merged = pd.merge(nodes, descriptions, left_on="id", right_on="conceptId", how="left")
 
+  # This isn't needed, we'll delete it
   merged.drop(columns=["conceptId"], inplace=True)
 
+  # There are multiple terms for each ID so we join them together with the semicolon
   merged = merged.groupby(["id", "active"])["term"].apply(lambda x: ';'.join(x.astype(str))).reset_index()
-
   merged = merged.rename(columns={"term": "descriptions"})
 
+  # Convert to CSV
   merged.to_csv("merged_nodes.csv", index=False)
 
 
 def to_csv(nodes, description, relationships):
+  """
+  Convert files to CSV and download them locally.
+  """
   nodes.to_csv("nodes.csv", index=False)
   description.to_csv("description.csv", index=False)
   relationships.to_csv("relationship.csv", index=False)
