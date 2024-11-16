@@ -30,6 +30,15 @@ def local_requirements():
   return nodes, description, relationships
 
 
+def to_csv(nodes, description, relationships):
+  """
+  Convert files to CSV and download them locally.
+  """
+  nodes.to_csv("nodes.csv", index=False)
+  description.to_csv("description.csv", index=False)
+  relationships.to_csv("relationship.csv", index=False)
+
+
 def create_indexes(transaction):
   """
   Creates indices over the most used database properties
@@ -110,24 +119,6 @@ def populate_relationships(transaction, relationships, batch_size=500):
         transaction.run(query, batch=batch.to_dict('records'))
 
 
-def fixDescription(description):
-  """
-  Description CSV has errors has the term column has commas within the term segment. Additionally, there are quotations which were removed manually. 
-  """
-
-  # nodes = pd.read_csv(node, sep='\t', dtype=str)
-  # relationships = pd.read_csv(relationship, sep='\t', dtype=str)
-
-  with open(description, 'r', encoding='utf-8') as file:
-        content = file.read().replace(',', '')
-        
-  with open(description, 'w', encoding='utf-8') as file:
-        file.write(content)
-
-  description = pd.read_csv(description, sep='\t', dtype=str)
-  description.to_csv("description.csv", index=False)
-
-
 def relation_update():
   """
   The original relationship.csv contains numerical values so modified_relationship.csv contains the actual word for which each node corresponds to.
@@ -167,6 +158,24 @@ def relation_update():
   relationships_df.to_csv('modified_relationship.csv', index=False)
 
 
+def fixDescription(description):
+  """
+  Description CSV has errors has the term column has commas within the term segment. Additionally, there are quotations which were removed manually. 
+  """
+
+  # nodes = pd.read_csv(node, sep='\t', dtype=str)
+  # relationships = pd.read_csv(relationship, sep='\t', dtype=str)
+
+  with open(description, 'r', encoding='utf-8') as file:
+        content = file.read().replace(',', '')
+        
+  with open(description, 'w', encoding='utf-8') as file:
+        file.write(content)
+
+  description = pd.read_csv(description, sep='\t', dtype=str)
+  description.to_csv("description.csv", index=False)
+
+
 def clean_csv(input_path, output_path):
     """
     There is also encoding issues has the data wasn't in UTF-8 format so it was rewritten.
@@ -189,8 +198,8 @@ def combine_nodes():
   """
 
   # We join the nodes.id with the descriptions.conceptId
-  nodes = pd.read_csv("nodes.csv", usecols=["id", "active"], dtype={"id": "int"})
-  descriptions = pd.read_csv("description.csv", usecols=["conceptId", "term", "effectiveTime"])
+  nodes = pd.read_csv("CSVItem/nodes.csv", usecols=["id", "active"], dtype={"id": "int"})
+  descriptions = pd.read_csv("CSVItem/description.csv", usecols=["conceptId", "term", "effectiveTime"])
 
   # Drop all rows with NaN values
   descriptions = descriptions.dropna(subset=["conceptId"])
@@ -211,31 +220,41 @@ def combine_nodes():
   merged = merged.rename(columns={"term": "descriptions"})
 
   # Convert to CSV
-  merged.to_csv("merged_nodes.csv", index=False)
-
-
-def to_csv(nodes, description, relationships):
-  """
-  Convert files to CSV and download them locally.
-  """
-  nodes.to_csv("nodes.csv", index=False)
-  description.to_csv("description.csv", index=False)
-  relationships.to_csv("relationship.csv", index=False)
+  merged.to_csv("CSVItem/merged_nodes.csv", index=False)
 
 
 def main():
-  nodes, description, relationships = local_requirements()
   uri = "bolt://localhost:7687"
   username = "neo4j"
   password = "MedicalRAG"
 
+  # Get information
+  node, descriptio, relationship = local_requirements()
+
+  nodes = pd.read_csv(node)
+  description = pd.read_csv(descriptio)
+  relationships = pd.read_csv(relationship)
+
+  # Make CSV
+  to_csv(nodes, description, relationships)
+
   # Connect to Neo4J
   driver = GraphDatabase.driver(uri, auth=(username, password))
+
+  # Fix relationships to get modified_relationship.csv
+  relation_update()
+
+  # Fix and clean descriptions
+  fixDescription(descriptio)
+  clean_csv(relationship, "CSVItems/modified_relationship.csv")
+
+  # Combine description with 
+
 
   # Populate the database
   with driver.session() as session:
     session.execute_write(create_indexes)
-    session.execute_write(populate_nodes, nodes, description)
+    session.execute_write(populate_nodes, node=nodes, description=description)
     session.execute_write(populate_relationships, relationships)
 
 
