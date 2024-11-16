@@ -56,21 +56,22 @@ def populate_nodes(transaction, nodes, descriptions, batch_size=1000):
 
   # Populates the nodes first
   for i in range(0, len(nodes), batch_size):
-        batch = nodes.iloc[i:i + batch_size]
-        print(f"Processing batch {i // batch_size + 1} of {len(nodes) // batch_size + 1} Concept nodes.")
-        
-        concept_query = """
-        UNWIND $batch AS row
-        CREATE (:Concept {
-            id: row.id,  # Use the 'id' column for Concept nodes
-            effectiveTime: row.effectiveTime, 
-            moduleId: row.moduleId, 
-            active: row.active, 
-            definitionStatusId: row.definitionStatusId
-        })
-        """
-        
-        transaction.run(concept_query, batch=batch.to_dict('records'))
+      batch = nodes.iloc[i:i + batch_size]
+      print(f"Processing batch {i // batch_size + 1} of {len(nodes) // batch_size + 1} Concept nodes.")  # Print batch info
+      
+      concept_query = """
+      UNWIND $batch AS row
+      CREATE (:Concept {
+          id: row.id, 
+          effectiveTime: row.effectiveTime, 
+          moduleId: row.moduleId, 
+          active: row.active, 
+          definitionStatusId: row.definitionStatusId
+      })
+      """
+      
+      transaction.run(concept_query, batch=batch.to_dict('records'))
+      print(f"Batch {i // batch_size + 1}: Created {len(batch)} Concept nodes.")
   
   # Next populates the descriptions that correspond with the nodes
   for i in range(0, len(descriptions), batch_size):
