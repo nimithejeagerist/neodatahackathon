@@ -8,7 +8,7 @@ import heapq
 # Neo4j Credentials
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
-NEO4J_PASSWORD = os.getenv("NEO4F_PASSWORD")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 # # Connection to Neo4j
 driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
