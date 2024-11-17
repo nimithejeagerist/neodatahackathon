@@ -5,13 +5,20 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 import heapq
 
+# Neo4j Credentials
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4F_PASSWORD")
+
+# Connection to Neo4j
 driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 
 
 def query_db(transaction, symptom:str):
+    """
+    Send the query to the database
+    """
+    # Get every node that contains the word we're looking for or is one layer away from the node that contains we're looking for
     result = transaction.run("""
         MATCH (n:Node)
         WHERE toLower(n.descriptions) CONTAINS $symptom
@@ -22,6 +29,9 @@ def query_db(transaction, symptom:str):
     return result
 
 def compute_embeddings(tokenizer, model, item:str):
+    """
+    Get the embeddings of any string through the ClinicalBERT model
+    """
     # Initial encoding
     raw_input = tokenizer.encode(item, return_tensor="pt", truncation=True)
 
@@ -48,6 +58,7 @@ def lambda_handler(event, context):
     PER_RESULT = 5
 
     symptoms = event.get("symptoms", [])
+    
     if not symptoms:
         return {"statusCode": 400, "body": json.dumps({"error": "No symptoms provided."})}
     
