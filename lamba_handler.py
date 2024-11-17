@@ -63,6 +63,7 @@ def lambda_handler(event, context):
         return {"statusCode": 400, "body": json.dumps({"error": "No symptoms provided."})}
     
     global_best = []
+    unique_diseases = {}
 
     # Connect with Neo4j
     with driver.session() as session:
@@ -107,13 +108,26 @@ def lambda_handler(event, context):
                         heapq.heapify(local_best)
             
             # Sort local best in a descending fashion
-            sorted_reverse_best = sorted(local_best, key=lambda x: x[0], reverse=True)
+            local_reverse_best = sorted(local_best, key=lambda x: x[0], reverse=True)
 
             # Add it to global best
-            global_best.append(sorted_reverse_best[:PER_SYMPTOM])
+            global_best.extend(local_reverse_best)
 
-            if len(global_best) >= PER_RESULT:
-                # Sort global best and only keep best PER_RESULT results
-                global_best = sorted(global_best, key=lambda x: x[0], reverse=True)[:PER_RESULT]
+            for score, disease in local_reverse_best:
+                # if disease already there then skip to next best scored disease
+                if disease in unique_diseases:
+                    continue
+                # if disease not in unique_disease then add it
+                elif disease not in unique_diseases and len(unique_diseases) < PER_RESULT:
+                    unique_diseases[disease] = (score, disease)
+                else:
+                    # Remove the disease with the lowest score
+                    lowest_score_disease = min(unique_diseases, key=lambda x: unique_diseases[x][0])
+                    del unique_diseases[lowest_score_disease]
+                    
+                    # Add new disease
+                    unique_diseases[disease] = (score, disease)
+            
+    global_best = sorted(unique_diseases.values(), key=lambda x: x[0], reverse=True)[:PER_RESULT]
 
     return {"statusCode": 200, "body": json.dumps({"diseases": "idk", "treatments": "dunno"})}
