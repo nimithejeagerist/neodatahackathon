@@ -121,13 +121,16 @@ def lambda_handler(event, context):
                 elif disease not in unique_diseases and len(unique_diseases) < PER_RESULT:
                     unique_diseases[disease] = (score, disease)
                 else:
-                    # Remove the disease with the lowest score
+                    # Find the disease with the lowest score
                     lowest_score_disease = min(unique_diseases, key=lambda x: unique_diseases[x][0])
+
+                    # remove that disease
                     del unique_diseases[lowest_score_disease]
                     
                     # Add new disease
                     unique_diseases[disease] = (score, disease)
-            
+    
+    # Sort global_best and return required values
     global_best = sorted(unique_diseases.values(), key=lambda x: x[0], reverse=True)[:PER_RESULT]
 
     return {"statusCode": 200, "body": json.dumps({"diseases": "idk", "treatments": "dunno"})}
