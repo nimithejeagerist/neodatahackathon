@@ -45,6 +45,7 @@ def lambda_handler(event, context):
 
     # Constants
     PER_SYMPTOM = 3
+    PER_RESULT = 5
 
     symptoms = event.get("symptoms", [])
     if not symptoms:
@@ -69,21 +70,35 @@ def lambda_handler(event, context):
             for row in results:
                 nodeDescription, relatedNode, relationship = row
 
+                # Get embeddings of the related nodes to the node we found
                 related_en = compute_embeddings(tk, ml, relatedNode)
+
+                # Compute score with query and related nodes
                 score = cos_diff(symptom_en, related_en)
 
+                # If the list is not full then add it regardless
                 if len(local_best) >= PER_SYMPTOM:
+                    # Replace it with the lowest element
                     heapq.heappush(local_best, (score, relatedNode))
+
+                    # Make sure it is properly sorted
+                    heapq.heapify(local_best)
+
                 else:
                     # If it is lower than the lowest value then we change
                     if score > local_best[0][0]:
                         heapq.heapreplace(local_best, (score, relatedNode))
 
-                        # Make sure it is properly sorted
                         heapq.heapify(local_best)
-
+            
+            # Sort local best in a descending fashion
             sorted_reverse_best = sorted(local_best, key=lambda x: x[0], reverse=True)
+
+            # Add it to global best
             global_best.append(sorted_reverse_best)
+
+            # Sort global best and only keep best PER_RESULT results
+            global_best = sorted(global_best, key=lambda x: x[0], reverse=True)[:PER_RESULT]
 
 
     return {"statusCode": 200, "body": json.dumps({"diseases": "idk", "treatments": "dunno"})}
