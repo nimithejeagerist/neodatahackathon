@@ -3,6 +3,7 @@ import pandas as pd
 from neo4j import GraphDatabase
 from pathlib import Path
 import csv
+import os
 
 
 def colab_requirements():
@@ -226,10 +227,10 @@ def combine_nodes():
 
 def main():
   uri = "bolt://localhost:7687"
-  # username = os.getenv("NEO4J_USER")
-  # password = os.genenv("NEO4J_PASS")
-  username = "neo4j"
-  password = "MedicalRAG"
+  username = os.getenv("NEO4J_USER")
+  password = os.genenv("NEO4J_PASS")
+  # username = "neo4j"
+  # password = "PASSWORD"
 
   # Get information
   node, descriptio, relationship = local_requirements()
