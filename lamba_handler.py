@@ -10,11 +10,11 @@ NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4F_PASSWORD")
 
-# Connection to Neo4j
+# # Connection to Neo4j
 driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 
 
-def query_db(transaction, symptom:str):
+def query_db(transaction, symptom:str) -> list[list[str]]:
     """
     Send the query to the database
     """
@@ -28,19 +28,19 @@ def query_db(transaction, symptom:str):
 
     return result
 
-def compute_embeddings(tokenizer, model, item:str):
+def compute_embeddings(tokenizer, model, item:str) -> torch.tensor:
     """
     Get the embeddings of any string through the ClinicalBERT model
     """
     # Initial encoding
-    raw_input = tokenizer.encode(item, return_tensor="pt", truncation=True)
+    raw_input = torch.tensor(tokenizer.encode(item, truncation="longest_first", max_length=512)).unsqueeze(0)
 
     # Turn off gradient updating
-    with torch.no_grad:
+    with torch.no_grad():
         outputs = model(raw_input)
 
     # Return only embeddings
-    return outputs.last_hidden_state[:, 0, :].squeeze()
+    return outputs.last_hidden_state[:, 0, :]
 
 
 def lambda_handler(event, context):
@@ -58,7 +58,7 @@ def lambda_handler(event, context):
     PER_RESULT = 5
 
     symptoms = event.get("symptoms", [])
-    
+
     if not symptoms:
         return {"statusCode": 400, "body": json.dumps({"error": "No symptoms provided."})}
     
@@ -76,6 +76,9 @@ def lambda_handler(event, context):
 
             # Top-k elements per each symptom
             local_best = []
+
+            # Turn it into a heap
+            heapq.heapify(local_best)
             
             # Go through each row we get back and encode it
             for row in results:
@@ -88,8 +91,8 @@ def lambda_handler(event, context):
                 score = cos_diff(symptom_en, related_en)
 
                 # If the list is not full then add it regardless
-                if len(local_best) >= PER_SYMPTOM:
-                    # Replace it with the lowest element
+                if len(local_best) <= PER_SYMPTOM:
+                    # Simply push it
                     heapq.heappush(local_best, (score, relatedNode))
 
                     # Make sure it is properly sorted
@@ -98,6 +101,7 @@ def lambda_handler(event, context):
                 else:
                     # If it is lower than the lowest value then we change
                     if score > local_best[0][0]:
+                        # Replace it with the lowest element
                         heapq.heapreplace(local_best, (score, relatedNode))
 
                         heapq.heapify(local_best)
@@ -106,11 +110,10 @@ def lambda_handler(event, context):
             sorted_reverse_best = sorted(local_best, key=lambda x: x[0], reverse=True)
 
             # Add it to global best
-            global_best.append(sorted_reverse_best)
+            global_best.append(sorted_reverse_best[:PER_SYMPTOM])
 
-            # Sort global best and only keep best PER_RESULT results
-            global_best = sorted(global_best, key=lambda x: x[0], reverse=True)[:PER_RESULT]
-
+            if len(global_best) >= PER_RESULT:
+                # Sort global best and only keep best PER_RESULT results
+                global_best = sorted(global_best, key=lambda x: x[0], reverse=True)[:PER_RESULT]
 
     return {"statusCode": 200, "body": json.dumps({"diseases": "idk", "treatments": "dunno"})}
-                    
