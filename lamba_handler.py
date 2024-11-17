@@ -8,13 +8,13 @@ NEO4J_PASSWORD = os.getenv("NEO4F_PASSWORD")
 driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 
 
-def query(transaction, symptom):
+def query(transaction, symptom:str):
     result = transaction.run("""
-        MATCH (n)
-        WHERE n.description CONTAINS $symptom
-        OPTIONAL MATCH (n)-[r*1..2]-(m)
-        RETURN n, m, r, n.description AS NodeDescription, m.description AS SurroundingNodeDescription
-    """, symptom=symptom)
+        MATCH (n:Node)
+        WHERE toLower(n.descriptions) CONTAINS $symptom
+        OPTIONAL MATCH (n)-[r*1]-(m:Node)
+        RETURN n.descriptions AS NodeDescription, m.descriptions AS RelatedNodeDescription, r AS relationship
+    """, symptom=symptom.lower())
 
     return result
 
