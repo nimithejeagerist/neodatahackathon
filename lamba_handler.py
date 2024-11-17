@@ -4,14 +4,15 @@ import os
 from transformers import AutoTokenizer, AutoModel
 import torch
 import heapq
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 # Neo4j Credentials
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
-
-# # Connection to Neo4j
-driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 
 
 def query_db(transaction, symptom:str) -> list[list[str]]:
@@ -43,7 +44,7 @@ def compute_embeddings(tokenizer, model, item:str) -> torch.tensor:
     return outputs.last_hidden_state[:, 0, :]
 
 
-def lambda_handler(event, context):
+def lambda_handler(symptoms:list):
     """
     Main handler for sending queries and recieving results.
     """
@@ -56,24 +57,24 @@ def lambda_handler(event, context):
     # Constants
     PER_SYMPTOM = 3
     PER_RESULT = 5
-
-    symptoms = event.get("symptoms", [])
-
-    if not symptoms:
-        return {"statusCode": 400, "body": json.dumps({"error": "No symptoms provided."})}
     
     global_best = []
     unique_diseases = {}
 
+    # If symptoms is empty then exit and return 1 as a error code
+    if not symptoms:
+        return 1
+
     # Connect with Neo4j
-    with driver.session() as session:
+    with GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD)) as driver:
+        driver.verify_connectivity()
 
         # for each symptom provided by the user
         for symptom in symptoms:
 
             # Encoded the symptom provided by the user
             symptom_en = compute_embeddings(tk, ml, symptom)
-            results = session.execute_read(query_db, symptom)
+            results = driver.execute_read(query_db, symptom)
 
             # Top-k elements per each symptom
             local_best = []
@@ -133,4 +134,6 @@ def lambda_handler(event, context):
     # Sort global_best and return required values
     global_best = sorted(unique_diseases.values(), key=lambda x: x[0], reverse=True)[:PER_RESULT]
 
-    return {"statusCode": 200, "body": json.dumps({"diseases": "idk", "treatments": "dunno"})}
+    return global_best
+
+print(lambda_handler(["cough", "flu"]))
