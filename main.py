@@ -1,16 +1,19 @@
 import streamlit as st
-import openai
+import requests
 import os
-import time
-
-# Set your OpenAI API key securely as an environment variable or load it here
-openai.api_key = "API KEY HERE"
+from dotenv import load_dotenv
+from openai import OpenAI
 
 # Configure Streamlit page
 st.set_page_config(page_title="MedicalRAG Chat", page_icon="💬", layout="wide")
-
 st.title("💬 MedicalRAG")
-st.caption("🚀 A Streamlit chatbot powered by OpenAI")
+st.caption("🚀 A Streamlit chatbot powered by FastAPI")
+
+load_dotenv()
+
+# Backend API URL
+API_URL = "http://127.0.0.1:8000/query"
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Initialize session state for conversations
 if "conversations" not in st.session_state:
@@ -48,60 +51,47 @@ for role, text in st.session_state.conversations[active_conversation]:
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""  # Initial value for user input
 
-user_input = st.text_input("Type your message:", key="user_input")
+user_input = st.text_input("Type your symptoms (comma-separated):", key="user_input")
+
+def extract_symptoms(user_input):
+    try:
+        prompt = (
+            "Extract relevant medical symptoms from the following user input. "
+            "Provide a comma-separated list of symptoms and do not include any unrelated terms:\n"
+            f"User input: \"{user_input}\""
+        )
+        
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        extracted_symptoms = response.choices[0].message.content.strip()
+        
+        # Convert to a list of symptoms
+        symptoms = [symptom.strip().lower() for symptom in extracted_symptoms.split(",")]
+        return symptoms
+    except Exception as e:
+        st.error(f"Error extracting symptoms: {e}")
+        return []
 
 # Handle message submission
 if st.button("Send") and user_input:
     # Append user message to the conversation
     st.session_state.conversations[active_conversation].append(("user", user_input))
-    
-    # Define context for the assistant
-    context = (
-        "Possible diseases and treatments based on the symptoms provided:\n"
-        "1. COVID-19: The recommended treatment is to see a doctor for proper testing and guidance.\n"
-        "2. Common Cold: The recommended treatment is to drink warm fluids to help alleviate symptoms.\n"
-    )
 
-    # Prepare prompt
-    prompt = (
-        f"{context}\n"
-        "Using only the information above, craft a message for the user. "
-        "Do not add any extra information or make any assumptions. "
-        "Follow this format:\n"
-        "Possible Conditions: bulleted list[List the conditions]\n"
-        "Recommended Actions: bulleted list [List the actions based on the treatments provided]\n"
-        "Final Advice: [Encourage consulting a doctor if symptoms persist]"
-    )
+    # Tokenize the input symptoms
+    symptoms = extract_symptoms(user_input)
 
-    # Placeholder to show the response
-    response_placeholder = st.empty()
-    full_response = ""
-
-    # Call OpenAI API to get response in streaming mode
+    # Make a POST request to the FastAPI backend
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use "gpt-4" or "gpt-4-turbo" if available and needed
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            stream=True  # Enable streaming
-        )
-        
-        # Stream the response chunks and display them in real time without extra formatting
-        for chunk in response:
-            if "choices" in chunk and len(chunk["choices"]) > 0:
-                delta = chunk["choices"][0]["delta"]
-                if "content" in delta:
-                    # Append content to full_response
-                    text_chunk = delta["content"]
-                    full_response += text_chunk
-                    
-                    # Display the response as it comes without additional bullet formatting
-                    response_placeholder.markdown(f"**MedicalRAG:**\n\n{full_response}")
-
-        # Append the full response to the conversation as received
-        st.session_state.conversations[active_conversation].append(("MedicalRAG", full_response))
-        
+        response = requests.post(API_URL, json={"symptoms": symptoms})
+        if response.status_code == 200:
+            # Get the response from the backend
+            backend_response = response.json().get("response", "No response received.")
+            st.session_state.conversations[active_conversation].append(("MedicalRAG", backend_response))
+            st.markdown(f"**MedicalRAG:** {backend_response}")
+        else:
+            st.error(f"Error from backend: {response.status_code} - {response.text}")
     except Exception as e:
-        st.error(f"Error in API call: {e}")
+        st.error(f"Exception occurred while calling backend API: {e}")
