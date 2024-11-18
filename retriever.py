@@ -9,7 +9,7 @@ import ssl
 
 
 # Neo4j Credentials
-NEO4J_URI =st.secrets(["neo4j"]["uri"])
+NEO4J_URI = st.secrets(["neo4j"]["uri"])
 NEO4J_USER = st.secrets(["neo4j"]["user"])
 NEO4J_PASSWORD = st.secrets(["neo4j"]["password"])
 
