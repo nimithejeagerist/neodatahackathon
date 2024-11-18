@@ -62,12 +62,18 @@ user_input = st.text_input("Type in your medical query:")
 # Function to extract symptoms
 def extract_symptoms(user_input):
     try:
+        # prompt = (
+        #     "The following user input contains a description of a health condition. "
+        #     "Identify any specific medical symptoms, explicitly mentioned disease names, and any treatments described. "
+        #     "Provide a comma-separated list of symptoms, diseases, and treatments mentioned in the input. "
+        #     "If the input includes a disease name (e.g., 'COVID-19', 'flu') or a treatment (e.g., 'antibiotics', 'Tylenol'), include them as well:\n"
+        #     f"User input: \"{user_input}\""
+        # )
         prompt = (
-            "The following user input contains a description of a health condition. "
-            "Identify any specific medical symptoms, explicitly mentioned disease names, and any treatments described. "
-            "Provide a comma-separated list of symptoms, diseases, and treatments mentioned in the input. "
-            "If the input includes a disease name (e.g., 'COVID-19', 'flu') or a treatment (e.g., 'antibiotics', 'Tylenol'), include them as well:\n"
-            f"User input: \"{user_input}\""
+            "The following user input contains medical terminology. Identify any medical terms mentioned, and for each term, provide the term itself followed by a comma and one synonym or related term." 
+            "The extraction should include the exact medical term as it appears in the input, and you must always provide a synonym or related term if available. Do not rephrase or alter the original sentence." 
+            "Example Input: what is hemoglobin" "Expected Output: hemoglobin, blood:\n"
+            f"Here is the user input: \"{user_input}\""
         )
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
