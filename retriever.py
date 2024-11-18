@@ -30,7 +30,7 @@ def query_db(transaction, symptom:str) -> list[list[str]]:
         WHERE toLower(n.descriptions) CONTAINS $symptom
         OPTIONAL MATCH (n)-[r*1..2]-(m:Nodes)
         RETURN DISTINCT n.descriptions AS NodeDescription, m.descriptions AS RelatedNodeDescription, r AS relationship
-        LIMIT 400
+        LIMIT 10
     """, symptom=symptom.lower())
 
     return [record for record in result]

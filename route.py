@@ -16,16 +16,18 @@ def generate_response(user_input, answers):
         f"Based on their input, you found the following relevant information:\n"
         f"\"{answers_str}\".\n\n"
         "Please craft a detailed response for the user. Make sure to:\n"
-        "State that the results were obtained from the National Institute of Health databases. This is IMPORTANT"
+        "State that the following results were obtained from the National Institute of Health SNOMED CT Database. This is IMPORTANT.\n"
         "- Directly address the user's input and explain how it relates to the retrieved information.\n"
+        "- You must relate the user input to the retrieved options. This is not optional."
         "- Avoid providing ambiguous or unrelated information.\n"
-        "- If any terms seem complex, give a brief explanation in simple language.\n"
+        "- If any terms seem complex, give a brief explanation in simple language. Make sure to explain why this is realted to the user query. You must do this\n"
         "- End the message with advice to consult a healthcare professional if needed.\n\n"
         "Respond in this structured format:\n"
         "Related Findings: [Summarize the main conditions or issues based on the input]\n"
         "Treatment Suggestions: [Provide recommended actions based on the findings]\n"
         "Clarifications: [Explain any complex terms, if necessary]\n"
-        "Final Advice: [Encourage the user to seek professional help if symptoms persist]"
+        "Final Advice: [Encourage the user to seek professional help if symptoms persist]\n"
+        "Please ensure to state the information was obtained from the National Institute of Health SNOMED CT Database."
     )
 
     # Make the API call

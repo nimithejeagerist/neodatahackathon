@@ -59,17 +59,18 @@ for role, text in st.session_state.conversations[active_conversation]:
         st.markdown(f"**MedicalRAG:** {text}")
 
 # Text input for user message
-user_input = st.text_input("Type your symptoms (comma-separated):")
+user_input = st.text_input("Input your medical query:")
 
 # Function to extract symptoms
 def extract_symptoms(user_input):
     try:
         prompt = (
-            "The following user input contains a description of a health condition. "
-            "Identify any specific medical symptoms, explicitly mentioned disease names, and any treatments described. "
-            "Provide a comma-separated list of symptoms, diseases, and treatments mentioned in the input. "
-            "If the input includes a disease name (e.g., 'COVID-19', 'flu') or a treatment (e.g., 'antibiotics', 'Tylenol'), include them as well:\n"
-            f"User input: \"{user_input}\""
+            "The following user input contains medical terminology. Identify all medical terms mentioned. If only one medical term is identified, provide the term followed by a comma and one synonym or related term. If multiple medical terms are identified, do not add any synonyms. " 
+            "The extraction should always include the exact medical terms as they appear in the input, and only include a synonym if there is exactly one medical term. Do not rephrase or alter the original sentence. "
+            "Under no circumstances should the original terms be altered. "
+            "Example Input: what is hemoglobin. Expected Output: hemoglobin, blood "
+            "Example input: he has diabetes and hypertension. Expected Output: diabetes, hypertension.\n "
+            f"Here is the user input: \"{user_input}\""
         )
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
