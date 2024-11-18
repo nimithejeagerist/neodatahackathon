@@ -9,9 +9,9 @@ import ssl
 
 
 # Neo4j Credentials
-NEO4J_URI =st.secrets("NEO4J_URI")
-NEO4J_USER = st.secrets("NEO4J_USER")
-NEO4J_PASSWORD = st.secrets("NEO4J_PASSWORD")
+NEO4J_URI =st.secrets(["neo4j"]["uri"])
+NEO4J_USER = st.secrets(["neo4j"]["user"])
+NEO4J_PASSWORD = st.secrets(["neo4j"]["password"])
 
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False

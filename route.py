@@ -1,7 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 
-client = OpenAI(api_key=st.secrets("OPENAI_API_KEY"))
+client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
 def generate_response(user_input, answers):
     # Combine the answers from the knowledge graph into a single string

@@ -9,7 +9,7 @@ from multiprocessing import Process
 
 # Load environment variables
 API_URL = "http://127.0.0.1:8000/query"
-client = OpenAI(api_key=st.secrets("OPENAI_API_KEY"))
+client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
 # Function to start the FastAPI server
 def start_fastapi():
