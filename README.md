@@ -35,8 +35,8 @@ Before you can run the project, you'll need to install the required dependencies
 
 1. **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/MedicalRAG.git
-    cd MedicalRAG
+    git clone https://github.com/nimithejeagerist/neodatahackathon.git
+    cd neodatahackathon
     ```
 
 2. **Install dependencies**:
@@ -47,31 +47,11 @@ Before you can run the project, you'll need to install the required dependencies
     pip install -r requirements.txt
     ```
 
-3. **Set up the .env file**:
-    Create a `.env` file in the root directory and add your environment variables:
-    ```plaintext
-    OPENAI_API_KEY=your-openai-api-key
-    NEO4J_URI=neo4j://localhost:7687
-    NEO4J_USER=neo4j
-    NEO4J_PASSWORD=your-neo4j-password
-    ```
+3. **Run the app**:
 
-4. **Install Neo4j**:
-    - Make sure you have Neo4j running locally or connect to an existing instance.
-    - For more details on installation, visit the [Neo4j documentation](https://neo4j.com/docs/).
-
-5. **Run the app**:
-    - Start the FastAPI server:
       ```bash
-      uvicorn api:app --reload
+      streamlit run main.py
       ```
-    - Run the Streamlit front-end:
-      ```bash
-      streamlit run app.py
-      ```
-
-6. **Access the chatbot**:
-    - Open your browser and navigate to [http://localhost:8501](http://localhost:8501) to interact with the chatbot.
 
 ## How It Works
 
@@ -91,8 +71,8 @@ MedicalRAG/
 │
 ├── api/                      # FastAPI backend
 │   └── app.py                # FastAPI server and endpoints
-│
-├── app.py                    # Streamlit UI
+├── main.py                   # Streamlit UI
+├── retriever.py              # RAG implementation  
 ├── .env                      # Environment variables (OpenAI API key, Neo4j credentials)
 ├── requirements.txt          # Python dependencies
 └── README.md                 # Project documentation

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from lamba_handler import query_knowledge_graph
+from retriever import query_knowledge_graph
 from route import generate_response
 from typing import List
 
