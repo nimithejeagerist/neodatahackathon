@@ -5,6 +5,7 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 import heapq
 from dotenv import load_dotenv
+import ssl
 
 # Load .env file
 load_dotenv()
@@ -14,6 +15,10 @@ NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
+
 
 def query_db(transaction, symptom:str) -> list[list[str]]:
     """
@@ -21,13 +26,13 @@ def query_db(transaction, symptom:str) -> list[list[str]]:
     """
     # Get every node that contains the word we're looking for or is one layer away from the node that contains we're looking for
     result = transaction.run("""
-        MATCH (n:Node)
+        MATCH (n:Nodes)
         WHERE toLower(n.descriptions) CONTAINS $symptom
-        OPTIONAL MATCH (n)-[r*1]-(m:Node)
+        OPTIONAL MATCH (n)-[r*1]-(m:Nodes)
         RETURN n.descriptions AS NodeDescription, m.descriptions AS RelatedNodeDescription, r AS relationship
     """, symptom=symptom.lower())
 
-    return result
+    return [record for record in result]
 
 def compute_embeddings(tokenizer, model, item:str) -> torch.tensor:
     """
@@ -66,7 +71,7 @@ def lambda_handler(symptoms:list):
         return 1
 
     # Connect with Neo4j
-    with GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD)) as driver:
+    with GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD), ssl_context=ssl_context) as driver:
         driver.verify_connectivity()
 
         # for each symptom provided by the user
@@ -74,7 +79,10 @@ def lambda_handler(symptoms:list):
 
             # Encoded the symptom provided by the user
             symptom_en = compute_embeddings(tk, ml, symptom)
-            results = driver.execute_read(query_db, symptom)
+
+            # Connect to the driver
+            with driver.session() as session:
+                results = session.execute_read(query_db, symptom)
 
             # Top-k elements per each symptom
             local_best = []
@@ -84,7 +92,10 @@ def lambda_handler(symptoms:list):
             
             # Go through each row we get back and encode it
             for row in results:
-                nodeDescription, relatedNode, relationship = row
+                relatedNode = row["RelatedNodeDescription"]
+                
+                if not isinstance(relatedNode, str):
+                    continue
 
                 # Get embeddings of the related nodes to the node we found
                 related_en = compute_embeddings(tk, ml, relatedNode)
@@ -136,4 +147,4 @@ def lambda_handler(symptoms:list):
 
     return global_best
 
-print(lambda_handler(["cough", "flu"]))
+print(lambda_handler(["Rhipicephalus sanguineus"]))
