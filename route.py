@@ -3,6 +3,7 @@ from openai import OpenAI
 
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
+@st.cache
 def generate_response(user_input, answers):
     # Combine the answers from the knowledge graph into a single string
     answers_str = "; ".join(answers)
