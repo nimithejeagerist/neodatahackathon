@@ -1,6 +1,10 @@
+import os
+from dotenv import load_dotenv
 from openai import OpenAI
 
-client = OpenAI()
+load_dotenv()
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 context = (
     "Possible diseases and treatments based on the symptoms provided:\n"
@@ -8,7 +12,7 @@ context = (
     "2. Common Cold: The recommended treatment is to drink warm fluids to help alleviate symptoms.\n"
 )
 
-def generate_response(diseases, treatments):
+def generate_response(answers):
     diseases_str = ", ". join(diseases)
     treatments_str = "\n".join([f"{d}: {', '.join(treatments[d])}" for d in treatments])   
 

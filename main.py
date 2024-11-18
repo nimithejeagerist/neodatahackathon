@@ -1,23 +1,34 @@
 import streamlit as st
 import requests
 import os
+import threading
+import uvicorn
 from dotenv import load_dotenv
 from openai import OpenAI
+from api import app as fastapi_app
+from multiprocessing import Process
+
+# Load environment variables
+load_dotenv()
+API_URL = "http://127.0.0.1:8000/query"
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Function to start the FastAPI server
+def start_fastapi():
+    uvicorn.run(fastapi_app, host="127.0.0.1", port=8000, log_level="info")
+
+# Start FastAPI in a separate process
+thread = threading.Thread(target=start_fastapi, daemon=True)
+thread.start()
 
 # Configure Streamlit page
 st.set_page_config(page_title="MedicalRAG Chat", page_icon="💬", layout="wide")
 st.title("💬 MedicalRAG")
 st.caption("🚀 A Streamlit chatbot powered by FastAPI")
 
-load_dotenv()
-
-# Backend API URL
-API_URL = "http://127.0.0.1:8000/query"
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# Initialize session state for conversations
+# Initialize session state
 if "conversations" not in st.session_state:
-    st.session_state.conversations = {"Conversation 1": []}  # Default conversation
+    st.session_state.conversations = {"Conversation 1": []}
 if "active_conversation" not in st.session_state:
     st.session_state.active_conversation = "Conversation 1"
 
@@ -48,27 +59,22 @@ for role, text in st.session_state.conversations[active_conversation]:
         st.markdown(f"**MedicalRAG:** {text}")
 
 # Text input for user message
-if "user_input" not in st.session_state:
-    st.session_state.user_input = ""  # Initial value for user input
+user_input = st.text_input("Type your symptoms (comma-separated):")
 
-user_input = st.text_input("Type your symptoms (comma-separated):", key="user_input")
-
+# Function to extract symptoms
 def extract_symptoms(user_input):
     try:
         prompt = (
-            "Extract relevant medical symptoms from the following user input. "
-            "Provide a comma-separated list of symptoms and do not include any unrelated terms:\n"
+            "The following user input contains a description of their condition. "
+            "Ignore any general or vague health terms and extract only specific, identifiable medical symptoms. "
+            "Provide a comma-separated list of these specific symptoms:\n"
             f"User input: \"{user_input}\""
         )
-        
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}]
         )
-        
         extracted_symptoms = response.choices[0].message.content.strip()
-        
-        # Convert to a list of symptoms
         symptoms = [symptom.strip().lower() for symptom in extracted_symptoms.split(",")]
         return symptoms
     except Exception as e:
@@ -77,17 +83,14 @@ def extract_symptoms(user_input):
 
 # Handle message submission
 if st.button("Send") and user_input:
-    # Append user message to the conversation
     st.session_state.conversations[active_conversation].append(("user", user_input))
-
-    # Tokenize the input symptoms
     symptoms = extract_symptoms(user_input)
+    st.write(symptoms)
 
     # Make a POST request to the FastAPI backend
     try:
         response = requests.post(API_URL, json={"symptoms": symptoms})
         if response.status_code == 200:
-            # Get the response from the backend
             backend_response = response.json().get("response", "No response received.")
             st.session_state.conversations[active_conversation].append(("MedicalRAG", backend_response))
             st.markdown(f"**MedicalRAG:** {backend_response}")
@@ -95,3 +98,10 @@ if st.button("Send") and user_input:
             st.error(f"Error from backend: {response.status_code} - {response.text}")
     except Exception as e:
         st.error(f"Exception occurred while calling backend API: {e}")
+
+# Main app function
+def main():
+    st.write("App is running!")
+
+if __name__ == "__main__":
+    main()

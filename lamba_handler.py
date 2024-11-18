@@ -6,7 +6,9 @@ import torch
 import heapq
 from dotenv import load_dotenv
 import ssl
+import time
 
+start = time.time()
 # Load .env file
 load_dotenv()
 
@@ -28,8 +30,8 @@ def query_db(transaction, symptom:str) -> list[list[str]]:
     result = transaction.run("""
         MATCH (n:Nodes)
         WHERE toLower(n.descriptions) CONTAINS $symptom
-        OPTIONAL MATCH (n)-[r*1]-(m:Nodes)
-        RETURN n.descriptions AS NodeDescription, m.descriptions AS RelatedNodeDescription, r AS relationship
+        OPTIONAL MATCH (n)-[r*1..2]-(m:Nodes)
+        RETURN DISTINCT n.descriptions AS NodeDescription, m.descriptions AS RelatedNodeDescription, r AS relationship
     """, symptom=symptom.lower())
 
     return [record for record in result]
@@ -49,7 +51,7 @@ def compute_embeddings(tokenizer, model, item:str) -> torch.tensor:
     return outputs.last_hidden_state[:, 0, :]
 
 
-def lambda_handler(symptoms:list):
+def query_knowledge_graph(symptoms:list):
     """
     Main handler for sending queries and recieving results.
     """
@@ -141,10 +143,16 @@ def lambda_handler(symptoms:list):
                     
                     # Add new disease
                     unique_diseases[disease] = (score, disease)
-    
+
     # Sort global_best and return required values
     global_best = sorted(unique_diseases.values(), key=lambda x: x[0], reverse=True)[:PER_RESULT]
+    
+    important_results = []
+    for tenor, word in  global_best:
+        important_results.append(word) 
+    
+    end = time.time()
+    print(end - start)
 
-    return global_best
+    return important_results
 
-print(lambda_handler(["Rhipicephalus sanguineus"]))
