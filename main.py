@@ -16,8 +16,8 @@ def start_fastapi():
     uvicorn.run(fastapi_app, host="127.0.0.1", port=8000, log_level="info")
 
 # Start FastAPI in a separate process
-thread = threading.Thread(target=start_fastapi, daemon=True)
-thread.start()
+fastapi_process = Process(target=start_fastapi)
+fastapi_process.start()
 
 # Configure Streamlit page
 st.set_page_config(page_title="MedicalRAG Chat", page_icon="💬", layout="wide")
