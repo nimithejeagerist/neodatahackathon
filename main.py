@@ -57,7 +57,7 @@ for role, text in st.session_state.conversations[active_conversation]:
         st.markdown(f"**MedicalRAG:** {text}")
 
 # Text input for user message
-user_input = st.text_input("Type your symptoms (comma-separated):")
+user_input = st.text_input("Type in your medical query:")
 
 # Function to extract symptoms
 def extract_symptoms(user_input):

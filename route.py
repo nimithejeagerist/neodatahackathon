@@ -18,7 +18,7 @@ def generate_response(user_input, answers):
         "- Directly address the user's input and explain how it relates to the retrieved information.\n"
         "- You must relate it to the retrieved options. This is not optional."
         "- Avoid providing ambiguous or unrelated information.\n"
-        "- If any terms seem complex, give a brief explanation in simple language.\n"
+        "- If any terms seem complex, give a brief explanation in simple language. Make sure to explain why this is realted to the user query. You must do this\n"
         "- End the message with advice to consult a healthcare professional if needed.\n\n"
         "Respond in this structured format:\n"
         "Related Findings: [Summarize the main conditions or issues based on the input]\n"
