@@ -70,9 +70,11 @@ def extract_symptoms(user_input):
         #     f"User input: \"{user_input}\""
         # )
         prompt = (
-            "The following user input contains medical terminology. Identify any medical terms mentioned, and for each term, provide the term itself followed by a comma and one synonym or related term." 
-            "The extraction should include the exact medical term as it appears in the input, and you must always provide a synonym or related term if available. Do not rephrase or alter the original sentence." 
-            "Example Input: what is hemoglobin" "Expected Output: hemoglobin, blood:\n"
+            "The following user input contains medical terminology. Identify all medical terms mentioned. If only one medical term is identified, provide the term followed by a comma and one synonym or related term. If multiple medical terms are identified, do not add any synonyms. " 
+            "The extraction should always include the exact medical terms as they appear in the input, and only include a synonym if there is exactly one medical term. Do not rephrase or alter the original sentence. "
+            "Under no circumstances should the original terms be altered. "
+            "Example Input: what is hemoglobin. Expected Output: hemoglobin, blood "
+            "Example input: he has diabetes and hypertension. Expected Output: diabetes, hypertension.\n "
             f"Here is the user input: \"{user_input}\""
         )
         response = client.chat.completions.create(
