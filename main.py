@@ -82,7 +82,7 @@ def extract_symptoms(user_input):
     except Exception as e:
         st.error(f"Error extracting symptoms: {e}")
         return []
-
+ 
 # Handle message submission
 if st.button("Send") and user_input:
     st.session_state.conversations[active_conversation].append(("user", user_input))
