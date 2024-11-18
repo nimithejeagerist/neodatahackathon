@@ -69,8 +69,9 @@ For each identified disease, the system provides recommended actions or treatmen
 ```
 MedicalRAG/
 │
-├── api/                      # FastAPI backend
-│   └── app.py                # FastAPI server and endpoints
+├── graphConstruction         # Contained the data and the preprocessing file
+│   └── medical_rag.py        # Preprocesses data
+├── api.py                    # FastAPI server and endpoints
 ├── main.py                   # Streamlit UI
 ├── retriever.py              # RAG implementation  
 ├── .env                      # Environment variables (OpenAI API key, Neo4j credentials)
@@ -86,4 +87,5 @@ Feel free to contribute to this project! To contribute, fork the repository, mak
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-encoder:  Wang, G., Liu, X., Ying, Z. et al. Optimized glycemic control of type 2 diabetes with reinforcement learning: a proof-of-concept trial. Nat Med (2023). https://doi.org/10.1038/s41591-023-02552-9
+##Citations
+ClincalBERT: Wang, G., Liu, X., Ying, Z. et al. Optimized glycemic control of type 2 diabetes with reinforcement learning: a proof-of-concept trial. Nat Med (2023). https://doi.org/10.1038/s41591-023-02552-9
