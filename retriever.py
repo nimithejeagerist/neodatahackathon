@@ -6,9 +6,7 @@ import torch
 import heapq
 from dotenv import load_dotenv
 import ssl
-import time
 
-start = time.time()
 # Load .env file
 load_dotenv()
 
@@ -32,6 +30,7 @@ def query_db(transaction, symptom:str) -> list[list[str]]:
         WHERE toLower(n.descriptions) CONTAINS $symptom
         OPTIONAL MATCH (n)-[r*1..2]-(m:Nodes)
         RETURN DISTINCT n.descriptions AS NodeDescription, m.descriptions AS RelatedNodeDescription, r AS relationship
+        LIMIT 400
     """, symptom=symptom.lower())
 
     return [record for record in result]
@@ -150,9 +149,6 @@ def query_knowledge_graph(symptoms:list):
     important_results = []
     for tenor, word in  global_best:
         important_results.append(word) 
-    
-    end = time.time()
-    print(end - start)
 
     return important_results
 

@@ -65,9 +65,10 @@ user_input = st.text_input("Type your symptoms (comma-separated):")
 def extract_symptoms(user_input):
     try:
         prompt = (
-            "The following user input contains a description of their condition. "
-            "Ignore any general or vague health terms and extract only specific, identifiable medical symptoms. "
-            "Provide a comma-separated list of these specific symptoms:\n"
+            "The following user input contains a description of a health condition. "
+            "Identify any specific medical symptoms, explicitly mentioned disease names, and any treatments described. "
+            "Provide a comma-separated list of symptoms, diseases, and treatments mentioned in the input. "
+            "If the input includes a disease name (e.g., 'COVID-19', 'flu') or a treatment (e.g., 'antibiotics', 'Tylenol'), include them as well:\n"
             f"User input: \"{user_input}\""
         )
         response = client.chat.completions.create(
@@ -85,11 +86,16 @@ def extract_symptoms(user_input):
 if st.button("Send") and user_input:
     st.session_state.conversations[active_conversation].append(("user", user_input))
     symptoms = extract_symptoms(user_input)
-    st.write(symptoms)
 
-    # Make a POST request to the FastAPI backend
+    # Make a POST request to the FastAPI backend    
     try:
-        response = requests.post(API_URL, json={"symptoms": symptoms})
+        # Include both symptoms and the original user input in the payload
+        payload = {
+            "symptoms": symptoms,
+            "user_input": user_input
+        }
+        
+        response = requests.post(API_URL, json=payload)
         if response.status_code == 200:
             backend_response = response.json().get("response", "No response received.")
             st.session_state.conversations[active_conversation].append(("MedicalRAG", backend_response))
@@ -101,7 +107,7 @@ if st.button("Send") and user_input:
 
 # Main app function
 def main():
-    st.write("App is running!")
+    print("App is running!")
 
 if __name__ == "__main__":
     main()

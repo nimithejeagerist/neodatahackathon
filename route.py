@@ -6,25 +6,26 @@ load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-context = (
-    "Possible diseases and treatments based on the symptoms provided:\n"
-    "1. COVID-19: The recommended treatment is to see a doctor for proper testing and guidance.\n"
-    "2. Common Cold: The recommended treatment is to drink warm fluids to help alleviate symptoms.\n"
-)
+def generate_response(user_input, answers):
+    # Combine the answers from the knowledge graph into a single string
+    answers_str = "; ".join(answers)
 
-def generate_response(answers):
-    diseases_str = ", ". join(diseases)
-    treatments_str = "\n".join([f"{d}: {', '.join(treatments[d])}" for d in treatments])   
-
+    # New prompt that includes the user input and the relevant answers
     prompt = (
-        f"{context}\n"
-        "Using only the information above, craft a message for the user. "
-        "Do not add any extra information or make any assumptions. "
-        "Follow this format:\n"
-        "Possible Conditions: {diseases_str}\n"
-        "Recommended Actions: {treatments_str}\n"
-        "Final Advice: [Encourage consulting a doctor if symptoms persist]"
-    
+        f"You received the following input from a user: \"{user_input}\".\n"
+        f"Based on their input, you found the following relevant information:\n"
+        f"\"{answers_str}\".\n\n"
+        "Please craft a detailed response for the user. Make sure to:\n"
+        "State that the results were obtained from the National Institute of Health databases. This is IMPORTANT"
+        "- Directly address the user's input and explain how it relates to the retrieved information.\n"
+        "- Avoid providing ambiguous or unrelated information.\n"
+        "- If any terms seem complex, give a brief explanation in simple language.\n"
+        "- End the message with advice to consult a healthcare professional if needed.\n\n"
+        "Respond in this structured format:\n"
+        "Related Findings: [Summarize the main conditions or issues based on the input]\n"
+        "Treatment Suggestions: [Provide recommended actions based on the findings]\n"
+        "Clarifications: [Explain any complex terms, if necessary]\n"
+        "Final Advice: [Encourage the user to seek professional help if symptoms persist]"
     )
 
     # Make the API call
