@@ -3,15 +3,13 @@ import requests
 import os
 import threading
 import uvicorn
-from dotenv import load_dotenv
 from openai import OpenAI
 from api import app as fastapi_app
 from multiprocessing import Process
 
 # Load environment variables
-load_dotenv()
 API_URL = "http://127.0.0.1:8000/query"
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=st.secrets("OPENAI_API_KEY"))
 
 # Function to start the FastAPI server
 def start_fastapi():

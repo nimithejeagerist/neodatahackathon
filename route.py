@@ -1,10 +1,7 @@
-import os
-from dotenv import load_dotenv
+import streamlit as st
 from openai import OpenAI
 
-load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=st.secrets("OPENAI_API_KEY"))
 
 def generate_response(user_input, answers):
     # Combine the answers from the knowledge graph into a single string

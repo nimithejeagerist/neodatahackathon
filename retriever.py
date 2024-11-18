@@ -4,16 +4,14 @@ import os
 from transformers import AutoTokenizer, AutoModel
 import torch
 import heapq
-from dotenv import load_dotenv
+import streamlit as st
 import ssl
 
-# Load .env file
-load_dotenv()
 
 # Neo4j Credentials
-NEO4J_URI = os.getenv("NEO4J_URI")
-NEO4J_USER = os.getenv("NEO4J_USER")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+NEO4J_URI =st.secrets("NEO4J_URI")
+NEO4J_USER = st.secrets("NEO4J_USER")
+NEO4J_PASSWORD = st.secrets("NEO4J_PASSWORD")
 
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
