@@ -17,7 +17,6 @@ ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
-
 def query_db(transaction, symptom:str) -> list[list[str]]:
     """
     Send the query to the database
@@ -47,7 +46,7 @@ def compute_embeddings(tokenizer, model, item:str) -> torch.tensor:
     # Return only embeddings
     return outputs.last_hidden_state[:, 0, :]
 
-
+@st.cache_data
 def query_knowledge_graph(symptoms:list):
     """
     Main handler for sending queries and recieving results.
