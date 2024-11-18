@@ -6,6 +6,5 @@ requests
 python-dotenv
 streamlit
 pandas
-csv
 transformers
 torch
