@@ -20,12 +20,6 @@ MedicalRAG is a medical chatbot powered by FastAPI, OpenAI's GPT model, and a kn
 - **Transformers (Hugging Face)**: For embedding generation using ClinicalBERT.
 - **Python**: Backend language.
 
-## Images of the Knowledge Graph
-![Screenshot 2024-11-16 095844](https://github.com/user-attachments/assets/f6b20a99-7dec-4c4c-bc55-70e1ae84cf45)
-![Screenshot 2024-11-17 202538](https://github.com/user-attachments/assets/86b3da7d-ad12-413c-8ed6-368cffbbd72f)
-![Screenshot 2024-11-17 202526](https://github.com/user-attachments/assets/4c5292cb-19ff-406a-8ec7-9bb4ed97f3e4)
-![Screenshot 2024-11-16 100159](https://github.com/user-attachments/assets/ffd5d9ac-0a71-4782-8bf1-f16140701f2d)
-
 
 ## Requirements
 
@@ -86,9 +80,11 @@ MedicalRAG/
 └── README.md                 # Project documentation
 ```
 
-## Contributions
-
-Feel free to contribute to this project! To contribute, fork the repository, make your changes, and submit a pull request.
+## Images of the Knowledge Graph
+![Screenshot 2024-11-16 095844](https://github.com/user-attachments/assets/f6b20a99-7dec-4c4c-bc55-70e1ae84cf45)
+![Screenshot 2024-11-17 202538](https://github.com/user-attachments/assets/86b3da7d-ad12-413c-8ed6-368cffbbd72f)
+![Screenshot 2024-11-17 202526](https://github.com/user-attachments/assets/4c5292cb-19ff-406a-8ec7-9bb4ed97f3e4)
+![Screenshot 2024-11-16 100159](https://github.com/user-attachments/assets/ffd5d9ac-0a71-4782-8bf1-f16140701f2d)
 
 ## License
 
